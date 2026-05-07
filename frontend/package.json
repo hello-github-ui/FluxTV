@@ -1,0 +1,39 @@
+{
+  "name": "fluxtv-frontend",
+  "version": "1.0.0",
+  "description": "FluxTV IPTV平台前端应用",
+  "private": true,
+  "dependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "antd": "^5.15.0",
+    "axios": "^1.6.7",
+    "hls.js": "^1.5.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3",
+    "video.js": "^8.10.0",
+    "zustand": "^4.5.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:3001"
+}

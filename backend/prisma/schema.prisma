@@ -1,0 +1,88 @@
+// 作者: 19920728
+// 创建日期: 2026-05-07 15:35:00
+
+// 数据库连接配置
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  email     String?  @db.VarChar(100)
+  role      Int      @default(0) // 0-普通用户, 1-管理员
+  status    Int      @default(1) // 0-禁用, 1-启用
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  favorites     Favorite[]
+  playHistories PlayHistory[]
+
+  @@map("users")
+}
+
+// 分类表
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(50)
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  channels Channel[]
+
+  @@map("categories")
+}
+
+// 频道表
+model Channel {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  url         String   @db.VarChar(500)
+  categoryId  Int      @map("category_id")
+  logo        String?  @db.VarChar(255)
+  status      Int      @default(1) // 0-禁用, 1-启用
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category    Category @relation(fields: [categoryId], references: [id])
+  favorites   Favorite[]
+  playHistories PlayHistory[]
+
+  @@map("channels")
+}
+
+// 收藏表
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  channelId Int      @map("channel_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  channel  Channel  @relation(fields: [channelId], references: [id])
+
+  @@unique([userId, channelId])
+  @@map("favorites")
+}
+
+// 播放历史表
+model PlayHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  channelId Int      @map("channel_id")
+  playTime  DateTime @default(now()) @map("play_time")
+  duration  Int      @default(0)
+
+  user     User    @relation(fields: [userId], references: [id])
+  channel  Channel @relation(fields: [channelId], references: [id])
+
+  @@map("play_history")
+}

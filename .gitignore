@@ -1,8 +1,5 @@
 # Compiled class file
-*.class
-
-# Log file
-*.log
+**/*.class
 
 # BlueJ files
 *.ctxt
@@ -22,3 +19,18 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+**/.DS_Store
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+**/.vscode/
+**/node_modules/
+**/logs/
+**/*.log
+**/log/

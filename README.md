@@ -247,6 +247,104 @@ python3 iptv_auto.py
 | 第三阶段 | 管理后台、直播源上传 | ✅ 完成 |
 | 第四阶段 | 性能优化、测试完善 | 进行中 |
 
+## 部署到 Render
+
+本项目支持部署到 [Render](https://render.com/) 平台，以下是详细的部署步骤。
+
+### 前置准备
+
+1. 注册并登录 [Render](https://dashboard.render.com/) 账户
+2. 在本地完成代码开发和测试
+
+### 部署步骤
+
+#### 1. 创建 MySQL 数据库
+
+1. 在 Render 控制台点击 "New" -> "Database"
+2. 选择 "MySQL"
+3. 设置数据库名称为 `fluxtv-db`
+4. 选择 "Starter" 计划
+5. 等待数据库创建完成，记录连接字符串
+
+#### 2. 创建 Redis 实例
+
+1. 在 Render 控制台点击 "New" -> "Redis"
+2. 设置实例名称为 `fluxtv-redis`
+3. 选择 "Starter" 计划
+4. 等待实例创建完成，记录连接字符串
+
+#### 3. 部署后端服务
+
+1. 在 Render 控制台点击 "New" -> "Web Service"
+2. 选择你的代码仓库
+3. 设置服务名称为 `fluxtv-backend`
+4. 配置构建和启动命令：
+   - **Build Command**: `cd backend && npm install && npx prisma generate`
+   - **Start Command**: `cd backend && npm start`
+5. 设置环境变量：
+   | 变量名 | 值 |
+   |--------|-----|
+   | `NODE_ENV` | `production` |
+   | `DATABASE_URL` | MySQL 连接字符串 |
+   | `REDIS_URL` | Redis 连接字符串 |
+   | `JWT_SECRET` | 生成一个随机密钥（建议32位以上） |
+   | `PORT` | `10000` |
+6. 选择 "Starter" 计划
+7. 点击 "Create Web Service"
+
+#### 4. 部署前端服务
+
+1. 在 Render 控制台点击 "New" -> "Static Site"
+2. 选择你的代码仓库
+3. 设置服务名称为 `fluxtv-frontend`
+4. 配置构建命令：
+   - **Build Command**: `cd frontend && npm install && npm run build`
+   - **Publish Directory**: `frontend/build`
+5. 设置环境变量：
+   | 变量名 | 值 |
+   |--------|-----|
+   | `REACT_APP_API_URL` | 后端服务 URL + `/api`（例如：`https://fluxtv-backend.onrender.com/api`） |
+6. 点击 "Create Static Site"
+
+### 环境变量说明
+
+#### 前端环境变量
+
+| 变量名 | 说明 | 必填 |
+|--------|------|------|
+| `REACT_APP_API_URL` | 后端 API 地址 | 是 |
+
+#### 后端环境变量
+
+| 变量名 | 说明 | 必填 |
+|--------|------|------|
+| `NODE_ENV` | 运行环境，生产环境设置为 `production` | 是 |
+| `DATABASE_URL` | MySQL 数据库连接字符串 | 是 |
+| `REDIS_URL` | Redis 连接字符串 | 是 |
+| `JWT_SECRET` | JWT 密钥，用于签名 Token | 是 |
+| `PORT` | 服务端口 | 是 |
+
+### 注意事项
+
+1. **部署顺序**：先部署后端服务，获取后端 URL 后再部署前端
+2. **SSL/TLS**：Render 默认提供 HTTPS，确保前端和后端都使用 HTTPS
+3. **冷启动延迟**：免费计划的服务在长时间未访问后会自动休眠，首次访问可能有延迟
+4. **数据库连接**：确保 MySQL 和 Redis 服务与后端服务在同一地区
+5. **环境变量前缀**：React 项目中只有以 `REACT_APP_` 开头的环境变量才会被注入到应用中
+6. **CORS 配置**：后端已配置允许所有来源，生产环境建议限制为前端域名
+
+### 使用 render.yaml 一键部署
+
+项目已提供 `render.yaml` 配置文件，可以使用以下步骤一键部署：
+
+1. 在 Render 控制台点击 "New" -> "From Blueprint"
+2. 输入你的代码仓库 URL
+3. 点击 "Apply"
+4. 在配置页面补充缺失的环境变量（如 `JWT_SECRET`）
+5. 点击 "Deploy"
+
+> **注意**：使用 Blueprint 部署时，`REACT_APP_API_URL` 需要在部署后手动设置为实际的后端服务 URL。
+
 ## 许可证
 
 MIT License

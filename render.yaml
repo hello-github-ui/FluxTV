@@ -1,0 +1,55 @@
+# Render 部署配置文件
+# 部署前请确保已创建好 MySQL 数据库和 Redis 服务
+
+services:
+  # 后端服务
+  - type: web
+    name: fluxtv-backend
+    env: node
+    plan: starter
+    buildCommand: cd backend && npm install && npx prisma generate
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fluxtv-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: fluxtv-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000
+    healthCheckPath: /api/health
+
+  # 前端服务
+  - type: web
+    name: fluxtv-frontend
+    env: static
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: fluxtv-backend
+          property: host
+        # 注意：需要在部署后手动设置为实际的后端 URL，如 https://fluxtv-backend.onrender.com/api
+
+databases:
+  # MySQL 数据库
+  - name: fluxtv-db
+    databaseName: fluxtv
+    user: fluxtv
+    plan: starter
+
+redis:
+  # Redis 缓存
+  - name: fluxtv-redis
+    plan: starter

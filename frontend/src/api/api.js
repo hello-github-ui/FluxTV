@@ -8,8 +8,21 @@ import axios from 'axios';
 import useStore from '../store/store';
 
 // 创建axios实例
+const getBaseURL = () => {
+  // 优先使用环境变量
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  // 开发环境使用代理
+  if (process.env.NODE_ENV === 'development') {
+    return '/api';
+  }
+  // 生产环境默认使用当前域名的 /api 路径
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? 'http://localhost:3001/api' : '/api',
+  baseURL: getBaseURL(),
   timeout: 10000
 });
 

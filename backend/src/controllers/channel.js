@@ -4,7 +4,7 @@
  * 创建日期: 2026-05-07 16:20:00
  */
 
-const { prisma } = require('../app');
+const prisma = require('../utils/prisma');
 const redis = require('../utils/redis');
 
 /**
@@ -206,10 +206,48 @@ const deleteChannel = async (req, res) => {
   }
 };
 
+/**
+ * 批量删除频道
+ * @param {object} req - 请求对象
+ * @param {object} res - 响应对象
+ */
+const batchDeleteChannels = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    // 验证参数
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: '请选择要删除的频道' });
+    }
+    
+    // 批量删除频道
+    const result = await prisma.channel.deleteMany({
+      where: {
+        id: {
+          in: ids.map(id => parseInt(id))
+        }
+      }
+    });
+    
+    // 清除缓存
+    await redis.del('channels');
+    
+    res.json({ 
+      success: true, 
+      message: `成功删除 ${result.count} 个频道`,
+      deletedCount: result.count
+    });
+  } catch (err) {
+    console.error('批量删除频道失败:', err);
+    res.status(500).json({ success: false, error: '服务器内部错误' });
+  }
+};
+
 module.exports = {
   getChannels,
   getChannel,
   createChannel,
   updateChannel,
-  deleteChannel
+  deleteChannel,
+  batchDeleteChannels
 };

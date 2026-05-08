@@ -141,6 +141,26 @@ function Register() {
             />
           </Form.Item>
 
+          <Form.Item
+            name="role"
+            label="角色"
+            initialValue="0"
+          >
+            <select 
+              style={{ 
+                width: '100%', 
+                padding: '11px 12px', 
+                background: '#2a475e', 
+                borderColor: '#3d5a73', 
+                color: '#fff',
+                borderRadius: '4px'
+              }}
+            >
+              <option value="0">普通用户</option>
+              <option value="1">管理员</option>
+            </select>
+          </Form.Item>
+
           <Form.Item>
             <Button 
               type="primary" 

@@ -1,94 +1,316 @@
 /**
  * 视频播放器组件
  * 作者: 19920728
- * 创建日期: 2026-05-07 17:30:00
+ * 创建日期: 2026-05-08 19:00:00
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import videojs from 'video.js';
 import Hls from 'hls.js';
 import 'video.js/dist/video-js.css';
+import { Alert, Spin } from 'antd';
 
 function VideoPlayer({ channel, onError }) {
-  const videoRef = useRef(null);
-  const playerRef = useRef(null);
+  const containerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isMountedRef = useRef(true);
+  const initDoneRef = useRef(false); // 标记是否已初始化
 
-  useEffect(() => {
-    // 销毁旧播放器
-    if (playerRef.current) {
-      playerRef.current.dispose();
-      playerRef.current = null;
+  // 安全设置状态
+  const safeSetState = useCallback((setter, value) => {
+    if (isMountedRef.current) {
+      setter(value);
+    }
+  }, []);
+
+  // 初始化播放器
+  const initPlayer = useCallback((container, videoElement, url) => {
+    let player = null;
+    let hls = null;
+
+    try {
+      player = videojs(videoElement, {
+        controls: true,
+        autoplay: false,
+        preload: 'metadata',
+        fluid: true,
+        aspectRatio: '16:9',
+        controlBar: {
+          volumePanel: { inline: false }
+        },
+        html5: {
+          vhs: {
+            overrideNative: true
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Failed to create player:', e);
+      safeSetState(setError, '播放器创建失败');
+      safeSetState(setLoading, false);
+      
+      // 清理
+      if (videoElement && videoElement.parentNode) {
+        videoElement.parentNode.removeChild(videoElement);
+      }
+      return { player: null, hls: null };
     }
 
-    if (!channel || !channel.url) return;
-
-    // 创建播放器
-    const videoElement = videoRef.current;
-    playerRef.current = videojs(videoElement, {
-      controls: true,
-      autoplay: true,
-      preload: 'auto',
-      fluid: true,
-      aspectRatio: '16:9',
-      controlBar: {
-        volumePanel: { inline: false }
-      },
-      poster: 'https://via.placeholder.com/1280x720?text=Loading...'
-    });
-
-    // 处理不同协议
-    const url = channel.url;
-    
-    if (url.includes('.m3u8') || url.includes('hls')) {
-      // HLS协议
+    // HLS播放逻辑
+    const setupHLS = () => {
       if (Hls.isSupported()) {
-        const hls = new Hls({
+        hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true
+          lowLatencyMode: true,
+          debug: false
         });
-        
-        hls.loadSource(url);
-        hls.attachMedia(videoElement);
-        
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          safeSetState(setLoading, false);
+          videoElement.play().catch(() => {});
+        });
+
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
+          safeSetState(setLoading, false);
+          
+          let errorMsg = '直播源加载失败';
           if (data.fatal) {
-            onError && onError('无法加载直播源');
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                errorMsg = data.details === 'manifestLoadError' 
+                  ? '无法加载直播源，可能是跨域限制或链接失效'
+                  : '网络错误';
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                errorMsg = '媒体格式错误';
+                break;
+              default:
+                errorMsg = '播放出错';
+            }
+            safeSetState(setError, errorMsg);
+            onError && onError(errorMsg);
           }
         });
+
+        try {
+          hls.loadSource(url);
+          hls.attachMedia(videoElement);
+        } catch (e) {
+          console.error('HLS load error:', e);
+          safeSetState(setError, '加载直播源失败');
+          safeSetState(setLoading, false);
+        }
       } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari原生HLS支持
         videoElement.src = url;
+        videoElement.addEventListener('loadedmetadata', () => {
+          safeSetState(setLoading, false);
+        });
+        videoElement.addEventListener('error', () => {
+          safeSetState(setLoading, false);
+          safeSetState(setError, '播放失败');
+        });
+      } else {
+        safeSetState(setLoading, false);
+        safeSetState(setError, '您的浏览器不支持HLS播放');
       }
+    };
+
+    // 根据URL类型设置播放
+    if (url.includes('.m3u8') || url.includes('hls')) {
+      setupHLS();
+    } else if (url.startsWith('rtmp://')) {
+      safeSetState(setLoading, false);
+      safeSetState(setError, 'RTMP协议需要Flash支持，现代浏览器已不支持');
     } else {
-      // 其他协议（RTMP等）
-      playerRef.current.src({
-        src: url,
-        type: 'rtmp/mp4'
-      });
+      try {
+        player.src({
+          src: url,
+          type: 'video/mp4'
+        });
+        
+        player.on('loadedmetadata', () => {
+          safeSetState(setLoading, false);
+        });
+      } catch (e) {
+        console.error('Set source error:', e);
+        safeSetState(setError, '设置播放源失败');
+        safeSetState(setLoading, false);
+      }
     }
 
     // 播放器错误处理
-    playerRef.current.on('error', () => {
-      console.error('Player Error:', playerRef.current.error());
-      onError && onError('播放出错');
+    player.on('error', () => {
+      try {
+        const playerError = player.error();
+        console.error('Player Error:', playerError);
+        safeSetState(setLoading, false);
+        
+        let errorMsg = '播放出错';
+        if (playerError) {
+          switch (playerError.code) {
+            case 2: errorMsg = '网络错误'; break;
+            case 3: errorMsg = '视频解码错误'; break;
+            case 4: errorMsg = '不支持的格式'; break;
+          }
+        }
+        safeSetState(setError, errorMsg);
+        onError && onError(errorMsg);
+      } catch (e) {
+        console.error('Error handler error:', e);
+      }
     });
 
-    // 清理函数
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
+    return { player, hls };
+  }, [safeSetState, onError]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    initDoneRef.current = false;
+    
+    // 重置状态
+    safeSetState(setLoading, true);
+    safeSetState(setError, null);
+
+    // 如果没有频道信息，直接返回
+    if (!channel || !channel.url) {
+      safeSetState(setError, '无效的频道信息');
+      safeSetState(setLoading, false);
+      
+      return () => {
+        isMountedRef.current = false;
+      };
+    }
+
+    // 使用后端代理访问直播源，解决CORS问题
+    // 使用完整的后端地址，避免React开发服务器代理路径重写问题
+    const backendHost = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+    const proxyUrl = `${backendHost}/api/proxy/stream?url=${encodeURIComponent(channel.url)}`;
+    let player = null;
+    let hls = null;
+    let videoElement = null;
+
+    // 使用 setTimeout 延迟初始化，确保容器已挂载
+    const initTimeout = setTimeout(() => {
+      const container = containerRef.current;
+      if (!container) {
+        safeSetState(setError, '容器元素不存在');
+        safeSetState(setLoading, false);
+        return;
       }
+
+      // 创建独立的video元素，不使用React ref
+      videoElement = document.createElement('video');
+      videoElement.className = 'video-js vjs-big-play-centered';
+      videoElement.playsInline = true;
+      videoElement.style.borderRadius = '8px';
+      
+      // 添加到容器
+      container.appendChild(videoElement);
+
+      // 初始化播放器
+      const result = initPlayer(container, videoElement, proxyUrl);
+      player = result.player;
+      hls = result.hls;
+      initDoneRef.current = true;
+    }, 0); // 在下一个事件循环中执行
+
+    // 清理函数
+    const cleanup = () => {
+      isMountedRef.current = false;
+      
+      // 清除初始化定时器
+      clearTimeout(initTimeout);
+      
+      // 使用微任务延迟清理
+      Promise.resolve().then(() => {
+        // 销毁HLS实例
+        if (hls) {
+          try {
+            hls.destroy();
+            hls = null;
+          } catch (e) {
+            console.warn('HLS destroy error:', e);
+          }
+        }
+        
+        // 销毁播放器
+        if (player) {
+          try {
+            player.pause();
+            player.dispose();
+            player = null;
+          } catch (e) {
+            console.warn('Player dispose error:', e);
+          }
+        }
+        
+        // 移除video元素
+        if (videoElement && videoElement.parentNode) {
+          try {
+            videoElement.parentNode.removeChild(videoElement);
+            videoElement = null;
+          } catch (e) {
+            console.warn('Remove video element error:', e);
+          }
+        }
+      });
     };
-  }, [channel]);
+
+    return cleanup;
+  }, [channel, safeSetState, initPlayer]);
+
+  // 显示错误信息
+  if (error) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        aspectRatio: '16/9',
+        background: '#1b2838',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '8px'
+      }}>
+        <Alert
+          message={error}
+          type="error"
+          showIcon
+          style={{ maxWidth: '80%' }}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: '100%' }}>
-      <video
-        ref={videoRef}
-        className="video-js vjs-big-play-centered"
-        playsInline
+    <div style={{ width: '100%', position: 'relative' }}>
+      {loading && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: '#1b2838',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+          borderRadius: '8px'
+        }}>
+          <Spin size="large" tip="加载中..." />
+        </div>
+      )}
+      <div 
+        ref={containerRef} 
+        style={{ 
+          width: '100%', 
+          aspectRatio: '16/9',
+          background: '#1b2838',
+          borderRadius: '8px',
+          overflow: 'hidden'
+        }} 
       />
     </div>
   );

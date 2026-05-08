@@ -1,10 +1,10 @@
 /**
  * 布局组件
  * 作者: 19920728
- * 创建日期: 2026-05-07 17:20:00
+ * 创建日期: 2026-05-08 12:00:00
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Layout as AntLayout, Menu, Button, Dropdown, Avatar } from 'antd';
 import { 
   HomeOutlined, 
@@ -46,73 +46,92 @@ function Layout() {
     navigate('/login');
   };
 
-  // 用户菜单
-  const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        个人中心
-      </Menu.Item>
-      {user?.role === 1 && (
-        <Menu.Item 
-          key="admin" 
-          icon={<DashboardOutlined />}
-          onClick={() => navigate('/admin')}
-        >
-          管理后台
-        </Menu.Item>
-      )}
-      <Menu.Item key="settings" icon={<SettingOutlined />}>
-        设置
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
-        退出登录
-      </Menu.Item>
-    </Menu>
-  );
+  // 用户菜单 - 使用 items 格式
+  const userMenuItems = useMemo(() => {
+    const items = [
+      {
+        key: 'profile',
+        label: '个人中心',
+        icon: <UserOutlined />,
+        onClick: () => navigate('/profile'),
+      },
+      {
+        key: 'settings',
+        label: '设置',
+        icon: <SettingOutlined />,
+        onClick: () => navigate('/settings'),
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'logout',
+        label: '退出登录',
+        icon: <LogoutOutlined />,
+        onClick: handleLogout,
+      },
+    ];
 
-  // 侧边栏菜单
-  const sideMenu = (
-    <Menu
-      mode="inline"
-      defaultSelectedKeys={['home']}
-      selectedKeys={[location.pathname === '/' ? 'home' : 'player']}
-      style={{ height: '100%', borderRight: 0 }}
-    >
-      <Menu.Item 
-        key="home" 
-        icon={<HomeOutlined />}
-        onClick={() => navigate('/')}
-      >
-        频道列表
-      </Menu.Item>
-      <Menu.Item 
-        key="player" 
-        icon={<PlaySquareOutlined />}
-        onClick={() => navigate('/player')}
-      >
-        播放器
-      </Menu.Item>
-    </Menu>
-  );
+    // 如果是管理员，添加管理后台菜单
+    if (user?.role === 1) {
+      items.splice(1, 0, {
+        key: 'admin',
+        label: '管理后台',
+        icon: <DashboardOutlined />,
+        onClick: () => navigate('/admin'),
+      });
+    }
+
+    return items;
+  }, [user, navigate]);
+
+  // 侧边栏菜单 - 使用 items 格式
+  const sideMenuItems = useMemo(() => {
+    const items = [
+      {
+        key: 'home',
+        label: '频道列表',
+        icon: <HomeOutlined />,
+        onClick: () => navigate('/'),
+      },
+      {
+        key: 'player',
+        label: '播放器',
+        icon: <PlaySquareOutlined />,
+        onClick: () => navigate('/player'),
+      },
+    ];
+    
+    // 如果是管理员，添加管理后台入口（明显显示）
+    if (user?.role === 1) {
+      items.push({
+        type: 'divider',
+      });
+      items.push({
+        key: 'admin',
+        label: '管理后台',
+        icon: <DashboardOutlined />,
+        onClick: () => navigate('/admin'),
+      });
+    }
+    
+    return items;
+  }, [user, navigate]);
+
+  // 确定当前选中的菜单项
+  const selectedKey = useMemo(() => {
+    return location.pathname === '/' ? 'home' : 'player';
+  }, [location.pathname]);
 
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
-      <Header style={{ 
-        background: '#010a1f', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        padding: '0 24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
-            FluxTV
-          </h1>
+    <AntLayout className="flux-layout">
+      <Header className="flux-header">
+        <div className="flux-logo">
+          <h1 className="flux-title">FluxTV</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="flux-user-menu">
           {user ? (
-            <Dropdown overlay={userMenu} placement="bottomRight">
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Button type="text" icon={<Avatar icon={<UserOutlined />} />}>
                 {user.username}
               </Button>
@@ -130,16 +149,18 @@ function Layout() {
           collapsible 
           collapsed={collapsed}
           onCollapse={setCollapsed}
-          style={{ background: '#0a1628' }}
+          className="flux-sider"
         >
-          <div className="logo" style={{ padding: '16px' }} />
-          {sideMenu}
+          <div className="flux-logo-inner" />
+          <Menu
+            mode="inline"
+            defaultSelectedKeys={['home']}
+            selectedKeys={[selectedKey]}
+            className="flux-menu"
+            items={sideMenuItems}
+          />
         </Sider>
-        <Content style={{ 
-          background: '#0d1b2a', 
-          padding: '24px',
-          minHeight: 'calc(100vh - 64px)'
-        }}>
+        <Content className="flux-content">
           <Outlet />
         </Content>
       </AntLayout>

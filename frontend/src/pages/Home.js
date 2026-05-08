@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Row, Col, Input, Select, Tag, Spin } from 'antd';
+import { Row, Col, Input, Select, Tag, Spin, Pagination } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import ChannelCard from '../components/ChannelCard';
 import { channelAPI, categoryAPI } from '../api/api';
@@ -20,6 +20,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [pagination, setPagination] = useState({ page: 1, limit: 24, total: 0 });
   const { setCategories: storeCategories } = useStore();
 
   // 获取分类列表
@@ -37,7 +38,10 @@ function Home() {
   // 获取频道列表
   useEffect(() => {
     setLoading(true);
-    const params = {};
+    const params = {
+      page: pagination.page,
+      limit: pagination.limit
+    };
     if (selectedCategory) {
       params.categoryId = selectedCategory;
     }
@@ -48,13 +52,27 @@ function Home() {
     channelAPI.getChannels(params).then((res) => {
       if (res.success) {
         setChannels(res.data);
+        if (res.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            total: res.pagination.total
+          }));
+        }
       }
       setLoading(false);
     }).catch(err => {
       console.error('获取频道失败:', err);
       setLoading(false);
     });
-  }, [keyword, selectedCategory]);
+  }, [keyword, selectedCategory, pagination.page, pagination.limit]);
+
+  const handlePageChange = (page, pageSize) => {
+    setPagination(prev => ({
+      ...prev,
+      page,
+      limit: pageSize
+    }));
+  };
 
   return (
     <div>
@@ -71,7 +89,10 @@ function Home() {
           enterButton={<SearchOutlined />}
           size="large"
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            setKeyword(e.target.value);
+            setPagination(prev => ({ ...prev, page: 1 }));
+          }}
           style={{ width: '300px' }}
         />
         <Select
@@ -80,7 +101,10 @@ function Home() {
           size="large"
           style={{ width: '200px' }}
           value={selectedCategory}
-          onChange={(value) => setSelectedCategory(value)}
+          onChange={(value) => {
+            setSelectedCategory(value);
+            setPagination(prev => ({ ...prev, page: 1 }));
+          }}
         >
           {categories.map((cat) => (
             <Option key={cat.id} value={cat.id}>
@@ -100,13 +124,27 @@ function Home() {
           暂无频道数据
         </div>
       ) : (
-        <Row gutter={[16, 16]}>
-          {channels.map((channel) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={channel.id}>
-              <ChannelCard channel={channel} />
-            </Col>
-          ))}
-        </Row>
+        <>
+          <Row gutter={[16, 16]}>
+            {channels.map((channel) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={channel.id}>
+                <ChannelCard channel={channel} />
+              </Col>
+            ))}
+          </Row>
+          {/* 分页 */}
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.limit}
+              total={pagination.total}
+              onChange={handlePageChange}
+              showSizeChanger
+              pageSizeOptions={['12', '24', '48', '96']}
+              showTotal={(total) => `共 ${total} 个频道`}
+            />
+          </div>
+        </>
       )}
     </div>
   );

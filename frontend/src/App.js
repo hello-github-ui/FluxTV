@@ -11,6 +11,8 @@ import Player from './pages/Player';
 import Admin, { AdminChannels, AdminCategories, AdminUpload, AdminUsers } from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
           <Route path="upload" element={<AdminUpload />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
     </Routes>
   );

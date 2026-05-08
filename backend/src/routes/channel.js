@@ -21,6 +21,9 @@ router.post('/', authenticate, requireAdmin, channelController.createChannel);
 // 更新频道（管理员）
 router.put('/:id', authenticate, requireAdmin, channelController.updateChannel);
 
+// 批量删除频道（管理员）- 必须放在单条删除之前
+router.delete('/batch', authenticate, requireAdmin, channelController.batchDeleteChannels);
+
 // 删除频道（管理员）
 router.delete('/:id', authenticate, requireAdmin, channelController.deleteChannel);
 

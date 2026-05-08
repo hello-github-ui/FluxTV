@@ -48,7 +48,8 @@ export const channelAPI = {
   getChannel: (id) => api.get(`/channels/${id}`),
   createChannel: (data) => api.post('/channels', data),
   updateChannel: (id, data) => api.put(`/channels/${id}`, data),
-  deleteChannel: (id) => api.delete(`/channels/${id}`)
+  deleteChannel: (id) => api.delete(`/channels/${id}`),
+  batchDeleteChannels: (ids) => api.delete('/channels/batch', { data: { ids } })
 };
 
 // 分类相关API
@@ -66,6 +67,7 @@ export const userAPI = {
   login: (data) => api.post('/users/login', data),
   getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
+  changePassword: (data) => api.put('/users/password', data),
   getUsers: (params) => api.get('/users', { params }),
   deleteUser: (id) => api.delete(`/users/${id}`),
   addFavorite: (data) => api.post('/users/favorites', data),

@@ -7,7 +7,7 @@
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { prisma } = require('../app');
+const prisma = require('../utils/prisma');
 const redis = require('../utils/redis');
 
 // 配置multer存储

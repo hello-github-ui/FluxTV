@@ -4,7 +4,7 @@
  * 创建日期: 2026-05-07 16:25:00
  */
 
-const { prisma } = require('../app');
+const prisma = require('../utils/prisma');
 const redis = require('../utils/redis');
 
 /**

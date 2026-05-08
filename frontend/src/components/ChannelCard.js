@@ -38,71 +38,33 @@ function ChannelCard({ channel }) {
   return (
     <Card
       hoverable
-      style={{ 
-        background: '#1b2838', 
-        borderColor: '#2a475e',
-        cursor: 'pointer',
-        transform: isPlaying ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: isPlaying ? '0 4px 20px rgba(99, 102, 241, 0.3)' : 'none'
-      }}
+      className={`channel-card ${isPlaying ? 'channel-card-playing' : ''}`}
       onClick={handlePlay}
-      bodyStyle={{ padding: '16px' }}
     >
-      <div style={{ 
-        position: 'relative', 
-        height: '120px', 
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      <div className="channel-card-image">
         {channel.logo ? (
           <img 
             src={channel.logo} 
             alt={channel.name}
-            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+            className="channel-card-logo"
           />
         ) : (
-          <PlayCircleOutlined style={{ fontSize: '48px', color: '#6366f1' }} />
+          <PlayCircleOutlined className="channel-card-placeholder" />
         )}
         {isPlaying && (
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            background: '#6366f1',
-            color: '#fff',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
-            LIVE
-          </div>
+          <div className="channel-card-live">LIVE</div>
         )}
       </div>
-      <div style={{ marginTop: '12px' }}>
-        <h3 style={{ 
-          color: '#fff', 
-          margin: '0 0 8px 0',
-          fontSize: '14px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {channel.name}
-        </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: '#8b949e', fontSize: '12px' }}>
-            {channel.category?.name || '未分类'}
-          </span>
+      <div className="channel-card-info">
+        <h3 className="channel-card-name">{channel.name}</h3>
+        <div className="channel-card-meta">
+          <span className="channel-card-category">{channel.category?.name || '未分类'}</span>
           <Tooltip title="收藏">
             <Button 
               type="text" 
               icon={<StarOutlined />}
               onClick={handleFavorite}
-              style={{ padding: '0', color: '#8b949e' }}
+              className="channel-card-favorite"
             />
           </Tooltip>
         </div>

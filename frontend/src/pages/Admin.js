@@ -40,22 +40,44 @@ function Admin() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
+  // 侧边栏菜单 - 使用 items 格式
+  const menuItems = [
+    {
+      key: 'channels',
+      label: '频道管理',
+      icon: <VideoCameraOutlined />,
+      onClick: () => navigate('/admin/channels'),
+    },
+    {
+      key: 'categories',
+      label: '分类管理',
+      icon: <FolderOpenOutlined />,
+      onClick: () => navigate('/admin/categories'),
+    },
+    {
+      key: 'upload',
+      label: '批量上传',
+      icon: <UploadOutlined />,
+      onClick: () => navigate('/admin/upload'),
+    },
+    {
+      key: 'users',
+      label: '用户管理',
+      icon: <UserOutlined />,
+      onClick: () => navigate('/admin/users'),
+    },
+  ];
+
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
-      <Header style={{ 
-        background: '#1b2838', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        padding: '0 24px'
-      }}>
+    <AntLayout className="admin-layout">
+      <Header className="admin-header">
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           onClick={() => setCollapsed(!collapsed)}
-          style={{ color: '#fff' }}
+          className="admin-toggle-btn"
         />
-        <h1 style={{ color: '#fff', margin: 0, fontSize: '18px' }}>管理后台</h1>
+        <h1 className="admin-title">管理后台</h1>
         <Button onClick={() => navigate('/')}>返回首页</Button>
       </Header>
       <AntLayout>
@@ -63,48 +85,16 @@ function Admin() {
           collapsible 
           collapsed={collapsed}
           onCollapse={setCollapsed}
-          style={{ background: '#0d1b2a' }}
+          className="admin-sider"
         >
           <Menu
             mode="inline"
             defaultSelectedKeys={['channels']}
-            style={{ height: '100%', borderRight: 0 }}
-          >
-            <Menu.Item 
-              key="channels" 
-              icon={<VideoCameraOutlined />}
-              onClick={() => navigate('/admin/channels')}
-            >
-              频道管理
-            </Menu.Item>
-            <Menu.Item 
-              key="categories" 
-              icon={<FolderOpenOutlined />}
-              onClick={() => navigate('/admin/categories')}
-            >
-              分类管理
-            </Menu.Item>
-            <Menu.Item 
-              key="upload" 
-              icon={<UploadOutlined />}
-              onClick={() => navigate('/admin/upload')}
-            >
-              批量上传
-            </Menu.Item>
-            <Menu.Item 
-              key="users" 
-              icon={<UserOutlined />}
-              onClick={() => navigate('/admin/users')}
-            >
-              用户管理
-            </Menu.Item>
-          </Menu>
+            className="admin-menu"
+            items={menuItems}
+          />
         </Sider>
-        <Content style={{ 
-          background: '#1b2838', 
-          padding: '24px',
-          minHeight: 'calc(100vh - 64px)'
-        }}>
+        <Content className="admin-content">
           <Outlet />
         </Content>
       </AntLayout>
@@ -121,6 +111,7 @@ export function AdminChannels() {
   const [categories, setCategories] = useState([]);
   const [form] = Form.useForm();
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
     loadChannels();
@@ -173,6 +164,28 @@ export function AdminChannels() {
     });
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请先选择要删除的频道');
+      return;
+    }
+
+    Modal.confirm({
+      title: '批量删除确认',
+      content: `确定要删除选中的 ${selectedRowKeys.length} 个频道吗？`,
+      onOk: async () => {
+        const res = await channelAPI.batchDeleteChannels(selectedRowKeys);
+        if (res.success) {
+          message.success(res.message);
+          setSelectedRowKeys([]);
+          loadChannels();
+        } else {
+          message.error(res.error);
+        }
+      }
+    });
+  };
+
   const handleSubmit = async (values) => {
     try {
       if (editingChannel) {
@@ -189,6 +202,11 @@ export function AdminChannels() {
     }
   };
 
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys) => setSelectedRowKeys(keys),
+  };
+
   const columns = [
     { title: '频道名称', dataIndex: 'name', key: 'name' },
     { title: '分类', dataIndex: 'category', key: 'category', render: (cat) => cat?.name },
@@ -197,7 +215,7 @@ export function AdminChannels() {
       title: '操作', 
       key: 'action', 
       render: (_, record) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="admin-actions">
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id)} />
         </div>
@@ -207,17 +225,25 @@ export function AdminChannels() {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+      <div className="admin-toolbar">
         <Input.Search
           placeholder="搜索频道"
           prefix={<SearchOutlined />}
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
           onSearch={loadChannels}
-          style={{ width: '300px' }}
+          className="admin-search"
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           添加频道
+        </Button>
+        <Button 
+          type="danger" 
+          icon={<DeleteOutlined />} 
+          onClick={handleBatchDelete}
+          disabled={selectedRowKeys.length === 0}
+        >
+          批量删除 ({selectedRowKeys.length})
         </Button>
       </div>
 
@@ -226,7 +252,8 @@ export function AdminChannels() {
           dataSource={channels} 
           columns={columns} 
           rowKey="id"
-          style={{ background: '#2a475e' }}
+          className="admin-table"
+          rowSelection={rowSelection}
         />
       </Spin>
 
@@ -344,7 +371,7 @@ export function AdminCategories() {
       title: '操作', 
       key: 'action', 
       render: (_, record) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="admin-actions">
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id)} />
         </div>

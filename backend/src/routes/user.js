@@ -21,6 +21,9 @@ router.get('/profile', authenticate, userController.getProfile);
 // 更新用户信息
 router.put('/profile', authenticate, userController.updateProfile);
 
+// 修改密码
+router.put('/password', authenticate, userController.changePassword);
+
 // 获取用户列表（管理员）
 router.get('/', authenticate, requireAdmin, userController.getUsers);
 

@@ -17,6 +17,7 @@ model User {
   username  String   @unique @db.VarChar(50)
   password  String   @db.VarChar(255)
   email     String?  @db.VarChar(100)
+  phone     String?  @db.VarChar(20)
   role      Int      @default(0) // 0-普通用户, 1-管理员
   status    Int      @default(1) // 0-禁用, 1-启用
   createdAt DateTime @default(now()) @map("created_at")
@@ -45,9 +46,9 @@ model Category {
 model Channel {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(100)
-  url         String   @db.VarChar(500)
+  url         String   @db.Text
   categoryId  Int      @map("category_id")
-  logo        String?  @db.VarChar(255)
+  logo        String?  @db.Text
   status      Int      @default(1) // 0-禁用, 1-启用
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

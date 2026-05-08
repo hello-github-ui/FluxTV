@@ -5,7 +5,7 @@
  */
 
 const bcrypt = require('bcryptjs');
-const { prisma } = require('../app');
+const prisma = require('../utils/prisma');
 const { generateToken } = require('../utils/jwt');
 
 /**
@@ -15,11 +15,17 @@ const { generateToken } = require('../utils/jwt');
  */
 const register = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, role = 0 } = req.body;
     
     // 验证参数
     if (!username || !password) {
       return res.status(400).json({ success: false, error: '用户名和密码不能为空' });
+    }
+    
+    // 验证角色参数（只能是0或1）
+    const userRole = parseInt(role) || 0;
+    if (userRole !== 0 && userRole !== 1) {
+      return res.status(400).json({ success: false, error: '无效的角色参数' });
     }
     
     // 检查用户名是否已存在
@@ -40,7 +46,7 @@ const register = async (req, res) => {
         username,
         password: hashedPassword,
         email,
-        role: 0 // 普通用户
+        role: userRole
       }
     });
     
@@ -132,6 +138,7 @@ const getProfile = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         createdAt: user.createdAt
       }
@@ -150,7 +157,7 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { user } = req;
-    const { email, password } = req.body;
+    const { email, phone } = req.body;
     
     const updateData = {};
     
@@ -158,8 +165,8 @@ const updateProfile = async (req, res) => {
       updateData.email = email;
     }
     
-    if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+    if (phone) {
+      updateData.phone = phone;
     }
     
     const updatedUser = await prisma.user.update({
@@ -173,11 +180,64 @@ const updateProfile = async (req, res) => {
         id: updatedUser.id,
         username: updatedUser.username,
         email: updatedUser.email,
-        role: updatedUser.role
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+        createdAt: updatedUser.createdAt
       }
     });
   } catch (err) {
     console.error('更新用户信息失败:', err);
+    res.status(500).json({ success: false, error: '服务器内部错误' });
+  }
+};
+
+/**
+ * 修改密码
+ * @param {object} req - 请求对象
+ * @param {object} res - 响应对象
+ */
+const changePassword = async (req, res) => {
+  try {
+    const { user } = req;
+    const { oldPassword, newPassword } = req.body;
+    
+    // 验证参数
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: '原密码和新密码不能为空' });
+    }
+    
+    // 验证新密码长度
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: '新密码长度至少6位' });
+    }
+    
+    // 查询用户
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    });
+    
+    if (!existingUser) {
+      return res.status(404).json({ success: false, error: '用户不存在' });
+    }
+    
+    // 验证原密码
+    const isPasswordValid = await bcrypt.compare(oldPassword, existingUser.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, error: '原密码不正确' });
+    }
+    
+    // 更新密码
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
+    
+    res.json({ success: true, message: '密码修改成功' });
+  } catch (err) {
+    console.error('修改密码失败:', err);
     res.status(500).json({ success: false, error: '服务器内部错误' });
   }
 };
@@ -402,6 +462,7 @@ module.exports = {
   login,
   getProfile,
   updateProfile,
+  changePassword,
   getUsers,
   deleteUser,
   addFavorite,

@@ -1,17 +1,15 @@
 /**
  * Redis工具类
  * 作者: 19920728
- * 创建日期: 2026-05-07 15:45:00
+ * 创建日期: 2026-05-08 11:30:00
  */
 
+require('dotenv').config();
 const { createClient } = require('redis');
 
-// 创建Redis客户端
+// 创建Redis客户端 - 使用v4版本配置方式
 const client = createClient({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD,
-  legacyMode: true
+  url: `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
 });
 
 /**
@@ -20,6 +18,7 @@ const client = createClient({
 const connect = async () => {
   try {
     await client.connect();
+    console.log(`Redis连接成功: ${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`);
     return true;
   } catch (err) {
     console.error('Redis连接失败:', err);

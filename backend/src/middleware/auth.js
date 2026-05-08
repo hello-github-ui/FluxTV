@@ -5,7 +5,7 @@
  */
 
 const { verifyToken } = require('../utils/jwt');
-const { prisma } = require('../app');
+const prisma = require('../utils/prisma');
 
 /**
  * 用户认证中间件

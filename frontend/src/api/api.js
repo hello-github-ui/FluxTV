@@ -9,7 +9,7 @@ import useStore from '../store/store';
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NODE_ENV === 'production' ? 'http://localhost:3001/api' : '/api',
   timeout: 10000
 });
 

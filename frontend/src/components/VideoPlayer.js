@@ -14,8 +14,10 @@ function VideoPlayer({ channel, onError }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPlayOverlay, setShowPlayOverlay] = useState(false);
   const isMountedRef = useRef(true);
   const initDoneRef = useRef(false); // 标记是否已初始化
+  const videoElementRef = useRef(null);
 
   // 安全设置状态
   const safeSetState = useCallback((setter, value) => {
@@ -43,12 +45,14 @@ function VideoPlayer({ channel, onError }) {
           vhs: {
             overrideNative: true
           }
-        }
+        },
+        bigPlayButton: true
       });
     } catch (e) {
       console.error('Failed to create player:', e);
       safeSetState(setError, '播放器创建失败');
       safeSetState(setLoading, false);
+      safeSetState(setShowPlayOverlay, true);
       
       // 清理
       if (videoElement && videoElement.parentNode) {
@@ -68,12 +72,16 @@ function VideoPlayer({ channel, onError }) {
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           safeSetState(setLoading, false);
-          videoElement.play().catch(() => {});
+          // 自动播放，如果失败则显示播放按钮
+          videoElement.play().catch(() => {
+            safeSetState(setShowPlayOverlay, true);
+          });
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
           safeSetState(setLoading, false);
+          safeSetState(setShowPlayOverlay, true);
           
           let errorMsg = '直播源加载失败';
           if (data.fatal) {
@@ -101,19 +109,25 @@ function VideoPlayer({ channel, onError }) {
           console.error('HLS load error:', e);
           safeSetState(setError, '加载直播源失败');
           safeSetState(setLoading, false);
+          safeSetState(setShowPlayOverlay, true);
         }
       } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
         videoElement.src = url;
         videoElement.addEventListener('loadedmetadata', () => {
           safeSetState(setLoading, false);
+          videoElement.play().catch(() => {
+            safeSetState(setShowPlayOverlay, true);
+          });
         });
         videoElement.addEventListener('error', () => {
           safeSetState(setLoading, false);
           safeSetState(setError, '播放失败');
+          safeSetState(setShowPlayOverlay, true);
         });
       } else {
         safeSetState(setLoading, false);
         safeSetState(setError, '您的浏览器不支持HLS播放');
+        safeSetState(setShowPlayOverlay, true);
       }
     };
 
@@ -123,6 +137,7 @@ function VideoPlayer({ channel, onError }) {
     } else if (url.startsWith('rtmp://')) {
       safeSetState(setLoading, false);
       safeSetState(setError, 'RTMP协议需要Flash支持，现代浏览器已不支持');
+      safeSetState(setShowPlayOverlay, true);
     } else {
       try {
         player.src({
@@ -132,11 +147,15 @@ function VideoPlayer({ channel, onError }) {
         
         player.on('loadedmetadata', () => {
           safeSetState(setLoading, false);
+          videoElement.play().catch(() => {
+            safeSetState(setShowPlayOverlay, true);
+          });
         });
       } catch (e) {
         console.error('Set source error:', e);
         safeSetState(setError, '设置播放源失败');
         safeSetState(setLoading, false);
+        safeSetState(setShowPlayOverlay, true);
       }
     }
 
@@ -146,6 +165,7 @@ function VideoPlayer({ channel, onError }) {
         const playerError = player.error();
         console.error('Player Error:', playerError);
         safeSetState(setLoading, false);
+        safeSetState(setShowPlayOverlay, true);
         
         let errorMsg = '播放出错';
         if (playerError) {
@@ -162,8 +182,29 @@ function VideoPlayer({ channel, onError }) {
       }
     });
 
+    // 播放开始时隐藏覆盖层
+    player.on('play', () => {
+      safeSetState(setShowPlayOverlay, false);
+    });
+
+    // 暂停时显示覆盖层
+    player.on('pause', () => {
+      if (!player.ended()) {
+        safeSetState(setShowPlayOverlay, true);
+      }
+    });
+
     return { player, hls };
   }, [safeSetState, onError]);
+
+  // 手动播放
+  const handlePlay = () => {
+    if (videoElementRef.current) {
+      videoElementRef.current.play().catch(err => {
+        console.error('Play failed:', err);
+      });
+    }
+  };
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -172,11 +213,13 @@ function VideoPlayer({ channel, onError }) {
     // 重置状态
     safeSetState(setLoading, true);
     safeSetState(setError, null);
+    safeSetState(setShowPlayOverlay, false);
 
     // 如果没有频道信息，直接返回
     if (!channel || !channel.url) {
       safeSetState(setError, '无效的频道信息');
       safeSetState(setLoading, false);
+      safeSetState(setShowPlayOverlay, true);
       
       return () => {
         isMountedRef.current = false;
@@ -197,11 +240,13 @@ function VideoPlayer({ channel, onError }) {
       if (!container) {
         safeSetState(setError, '容器元素不存在');
         safeSetState(setLoading, false);
+        safeSetState(setShowPlayOverlay, true);
         return;
       }
 
       // 创建独立的video元素，不使用React ref
       videoElement = document.createElement('video');
+      videoElementRef.current = videoElement;
       videoElement.className = 'video-js vjs-big-play-centered';
       videoElement.playsInline = true;
       videoElement.style.borderRadius = '8px';
@@ -251,6 +296,7 @@ function VideoPlayer({ channel, onError }) {
           try {
             videoElement.parentNode.removeChild(videoElement);
             videoElement = null;
+            videoElementRef.current = null;
           } catch (e) {
             console.warn('Remove video element error:', e);
           }
@@ -299,9 +345,63 @@ function VideoPlayer({ channel, onError }) {
           zIndex: 10,
           borderRadius: '8px'
         }}>
-          <Spin size="large" tip="加载中..." />
+          <div style={{ textAlign: 'center' }}>
+            <Spin size="large" />
+            <p style={{ color: '#8b949e', marginTop: '16px' }}>正在连接直播源...</p>
+          </div>
         </div>
       )}
+      
+      {/* 播放覆盖层 */}
+      {showPlayOverlay && !loading && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(27, 40, 56, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 20,
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+          onClick={handlePlay}
+        >
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'rgba(99, 102, 241, 0.9)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'transform 0.2s',
+            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          >
+            <svg 
+              width="40" 
+              height="40" 
+              viewBox="0 0 24 24" 
+              fill="#fff"
+              style={{ marginLeft: '4px' }}
+            >
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+      )}
+      
       <div 
         ref={containerRef} 
         style={{ 

@@ -21,6 +21,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/player" element={<Player />} />
         <Route path="/player/:channelId" element={<Player />} />
         <Route path="/admin" element={<Admin />}>
           <Route index element={<AdminChannels />} />

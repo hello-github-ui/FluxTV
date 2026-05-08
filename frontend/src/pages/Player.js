@@ -83,10 +83,31 @@ function Player() {
     }
   };
 
-  if (loading) {
+  if (!channelId) {
     return (
       <div style={{ textAlign: 'center', padding: '100px' }}>
-        <Spin size="large" />
+        <Alert 
+          message="请选择一个频道进行播放" 
+          type="info" 
+          style={{ maxWidth: '400px', margin: '0 auto' }}
+        />
+        <p style={{ marginTop: '16px', color: '#8b949e' }}>
+          请返回首页，从频道列表中选择一个频道播放
+        </p>
+        <button 
+          onClick={() => window.location.href = '/'}
+          style={{ 
+            marginTop: '16px',
+            padding: '10px 24px',
+            background: '#6366f1',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          返回首页
+        </button>
       </div>
     );
   }
@@ -151,8 +172,21 @@ function Player() {
 
       {/* 侧边栏 - 相关频道 */}
       <Col lg={6} xs={24}>
-        <Card style={{ background: '#1b2838', borderColor: '#2a475e' }} title="相关频道">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <Card style={{ 
+          background: '#1b2838', 
+          borderColor: '#2a475e',
+          maxHeight: 'calc(100vh - 200px)',
+          display: 'flex',
+          flexDirection: 'column'
+        }} title="相关频道">
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '12px',
+            overflowY: 'auto',
+            flex: 1,
+            maxHeight: 'calc(100vh - 300px)'
+          }}>
             {relatedChannels.map((ch) => (
               <div 
                 key={ch.id}
@@ -162,9 +196,12 @@ function Player() {
                   padding: '12px',
                   background: ch.id === channel.id ? '#6366f1' : '#2a475e',
                   borderRadius: '8px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
                 }}
                 onClick={() => window.location.href = `/player/${ch.id}`}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#3d5a73'}
+                onMouseLeave={(e) => e.currentTarget.style.background = ch.id === channel.id ? '#6366f1' : '#2a475e'}
               >
                 <div style={{ 
                   width: '48px', 
@@ -174,20 +211,26 @@ function Player() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: '12px'
+                  marginRight: '12px',
+                  flexShrink: 0
                 }}>
                   {ch.logo ? (
                     <img src={ch.logo} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   ) : (
-                    <span style={{ color: '#6366f1' }}>📺</span>
+                    <span style={{ color: '#6366f1', fontSize: '24px' }}>📺</span>
                   )}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: '#fff', fontSize: '14px' }}>{ch.name}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#fff', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ch.name}</div>
                   <div style={{ color: '#8b949e', fontSize: '12px' }}>{ch.category?.name}</div>
                 </div>
               </div>
             ))}
+            {relatedChannels.length === 0 && (
+              <div style={{ color: '#8b949e', textAlign: 'center', padding: '20px' }}>
+                暂无相关频道
+              </div>
+            )}
           </div>
         </Card>
       </Col>

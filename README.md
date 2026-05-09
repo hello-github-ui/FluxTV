@@ -247,6 +247,184 @@ python3 iptv_auto.py
 | 第三阶段 | 管理后台、直播源上传 | ✅ 完成 |
 | 第四阶段 | 性能优化、测试完善 | 进行中 |
 
+## Docker 部署
+
+本项目支持使用 Docker 和 Docker Compose 进行部署，适合在自己的服务器上快速部署。
+
+### 前置要求
+
+- Docker 20.10+
+- Docker Compose 2.0+
+
+### 快速开始
+
+#### 1. 克隆项目
+
+```bash
+git clone https://github.com/your-username/FluxTV.git
+cd FluxTV
+```
+
+#### 2. 配置环境变量
+
+复制环境变量模板并修改配置：
+
+```bash
+cp .env.docker .env
+```
+
+编辑 `.env` 文件，修改以下配置：
+
+```env
+# MySQL 配置
+MYSQL_ROOT_PASSWORD=root123456          # MySQL root 密码
+MYSQL_DATABASE=fluxtv                   # 数据库名称
+MYSQL_USER=fluxtv                       # 数据库用户名
+MYSQL_PASSWORD=fluxtv123456             # 数据库密码
+
+# JWT 密钥（请修改为随机字符串）
+JWT_SECRET=your-secret-key-change-in-production
+
+# 前端 API 地址
+# 本地测试：http://localhost:3001/api
+# 服务器部署：http://your-server-ip:3001/api 或 https://your-domain.com/api
+REACT_APP_API_URL=http://localhost:3001/api
+```
+
+#### 3. 准备直播源文件
+
+将直播源文件放入 `直播源` 目录：
+
+```bash
+# 创建直播源目录
+mkdir -p 直播源
+
+# 复制你的直播源文件到该目录
+cp /path/to/your/live.m3u 直播源/
+```
+
+#### 4. 启动服务
+
+```bash
+# 构建并启动所有服务
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+```
+
+#### 5. 初始化数据库
+
+首次部署需要运行数据库迁移：
+
+```bash
+# 进入后端容器
+docker-compose exec backend sh
+
+# 运行数据库迁移
+npx prisma migrate deploy
+
+# 退出容器
+exit
+```
+
+#### 6. 访问应用
+
+- 前端：http://localhost
+- 后端 API：http://localhost:3001
+
+### Docker Compose 服务说明
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| `mysql` | 3306 | MySQL 8.0 数据库 |
+| `redis` | 6379 | Redis 缓存服务 |
+| `backend` | 3001 | Node.js 后端服务 |
+| `frontend` | 80 | Nginx 前端服务 |
+
+### 常用命令
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 停止所有服务
+docker-compose down
+
+# 重启某个服务
+docker-compose restart backend
+
+# 查看服务日志
+docker-compose logs -f backend
+
+# 进入容器
+docker-compose exec backend sh
+
+# 重新构建镜像
+docker-compose build --no-cache
+
+# 停止并删除所有容器、网络、卷
+docker-compose down -v
+```
+
+### 数据持久化
+
+Docker Compose 配置了以下数据卷：
+
+- `mysql_data`：MySQL 数据库文件
+- `redis_data`：Redis 数据文件
+- `backend_uploads`：后端上传文件
+- `./直播源`：直播源文件目录（挂载到容器）
+
+### 更新部署
+
+```bash
+# 拉取最新代码
+git pull
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 运行数据库迁移（如有）
+docker-compose exec backend npx prisma migrate deploy
+```
+
+### 生产环境建议
+
+1. **修改默认密码**：修改 `.env` 文件中的所有密码
+2. **配置 HTTPS**：使用 Nginx 反向代理或 Traefik 配置 SSL
+3. **备份数据**：定期备份 MySQL 数据库
+4. **监控日志**：使用 Docker logs 或日志收集工具监控服务状态
+5. **资源限制**：在 `docker-compose.yml` 中添加资源限制
+
+### 故障排查
+
+#### 1. 后端无法连接数据库
+
+检查 MySQL 容器是否正常运行：
+
+```bash
+docker-compose ps mysql
+docker-compose logs mysql
+```
+
+#### 2. 前端无法访问后端 API
+
+检查 `REACT_APP_API_URL` 配置是否正确，确保使用正确的服务器地址。
+
+#### 3. 直播源未加载
+
+检查直播源文件是否正确挂载：
+
+```bash
+docker-compose exec backend ls -la /app/src/data/iptv
+```
+
+---
+
 ## 部署到 Render
 
 本项目支持部署到 [Render](https://render.com/) 平台，以下是详细的部署步骤。

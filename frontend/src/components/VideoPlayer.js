@@ -228,7 +228,7 @@ function VideoPlayer({ channel, onError }) {
 
     // 使用后端代理访问直播源，解决CORS问题
     // 使用完整的后端地址，避免React开发服务器代理路径重写问题
-    const backendHost = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+    const backendHost = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : 'http://localhost:3001';
     const proxyUrl = `${backendHost}/api/proxy/stream?url=${encodeURIComponent(channel.url)}`;
     let player = null;
     let hls = null;

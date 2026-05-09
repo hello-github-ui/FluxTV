@@ -312,7 +312,9 @@ python3 iptv_auto.py
 
 | 变量名 | 说明 | 必填 |
 |--------|------|------|
-| `REACT_APP_API_URL` | 后端 API 地址 | 是 |
+| `REACT_APP_API_URL` | 后端 API 地址（格式：`https://your-backend.onrender.com/api`） | 是 |
+
+> **重要说明**：`REACT_APP_API_URL` 用于所有 API 请求和视频流代理。播放器组件会自动从该 URL 中提取后端主机地址，无需额外配置 `REACT_APP_BACKEND_URL`。
 
 #### 后端环境变量
 
@@ -332,6 +334,7 @@ python3 iptv_auto.py
 4. **数据库连接**：确保 MySQL 和 Redis 服务与后端服务在同一地区
 5. **环境变量前缀**：React 项目中只有以 `REACT_APP_` 开头的环境变量才会被注入到应用中
 6. **CORS 配置**：后端已配置允许所有来源，生产环境建议限制为前端域名
+7. **视频播放配置**：播放器组件使用 `REACT_APP_API_URL` 环境变量来构建代理 URL，确保该变量包含 `/api` 路径（例如：`https://fluxtv-backend.onrender.com/api`）
 
 ### 使用 render.yaml 一键部署
 

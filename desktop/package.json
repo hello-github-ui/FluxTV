@@ -5,6 +5,7 @@
   "main": "electron/main.js",
   "author": "19920728",
   "license": "MIT",
+  "homepage": "https://github.com/hello-github-ui/FluxTV",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

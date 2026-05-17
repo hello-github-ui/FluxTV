@@ -47,6 +47,10 @@
     "files": [
       "dist/**/*",
       "electron/**/*"
-    ]
+    ],
+    "linux": {
+      "maintainer": "19920728 <example@email.com>",
+      "category": "AudioVideo"
+    }
   }
 }

@@ -33,6 +33,41 @@ FluxTV 是一个支持多平台的 IPTV 直播播放软件，包含 **Web 版本
 
 跨平台 IPTV 桌面播放器，基于 Electron 构建。
 
+### 自动构建 (GitHub Actions)
+
+项目已配置 GitHub Actions 自动构建功能，**每次创建并推送新 tag 就会自动构建多平台安装包**。
+
+#### 完整操作步骤：
+
+```bash
+# 1. 确保在 desktop-app 分支上
+git checkout desktop-app
+
+# 2. 如果有代码修改，先提交
+git add .
+git commit -m "你的修改说明"
+git push origin desktop-app
+
+# 3. 创建新 tag
+git tag -a v1.0.0 -m "FluxTV v1.0.0 发布"
+
+# 4. 推送 tag 到 GitHub
+# 方式一：单独推送该 tag
+git push origin v1.0.0
+
+# 方式二：推送所有本地 tags（推荐）
+git push --tags
+```
+
+推送后，GitHub Actions 会自动执行以下操作：
+- ✅ 构建 macOS 版本 (`.dmg`)
+- ✅ 构建 Windows 版本 (`.exe`)
+- ✅ 构建 Linux 版本 (`.AppImage` 和 `.deb`)
+- ✅ 创建 GitHub Release 草稿
+- ✅ 上传所有安装包
+
+详细文档：[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
 ### 技术栈
 
 | 组件 | 技术 |

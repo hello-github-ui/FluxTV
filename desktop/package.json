@@ -6,6 +6,10 @@
   "author": "19920728",
   "license": "MIT",
   "homepage": "https://github.com/hello-github-ui/FluxTV",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hello-github-ui/FluxTV.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

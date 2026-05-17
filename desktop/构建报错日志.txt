@@ -1,0 +1,40 @@
+> fluxtv-desktop@1.0.0 build
+> vite build
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+vite v5.4.21 building for production...
+transforming...
+✓ 3046 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.46 kB │ gzip:   0.32 kB
+dist/assets/index-JZcL2Yyr.css      1.21 kB │ gzip:   0.57 kB
+dist/assets/index-Cpgp2eGV.js   1,443.55 kB │ gzip: 456.21 kB
+✓ built in 9.46s
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+  • electron-builder  version=24.13.3 os=6.17.0-1013-azure
+  • loaded configuration  file=package.json ("build" field)
+  • packaging       platform=linux arch=x64 electron=29.4.6 appOutDir=release/linux-unpacked
+  • downloading     url=https://cdn.npmmirror.com/binaries/electron/29.4.6/electron-v29.4.6-linux-x64.zip size=103 MB parts=4
+  • downloaded      url=https://cdn.npmmirror.com/binaries/electron/29.4.6/electron-v29.4.6-linux-x64.zip duration=1.132s
+  • building        target=AppImage arch=x64 file=release/FluxTV-1.0.0.AppImage
+  • default Electron icon is used  reason=application icon is not set
+  • downloading     url=https://npmmirror.com/mirrors/electron-builder-binaries/appimage-12.0.1/appimage-12.0.1.7z size=1.6 MB parts=1
+  • downloaded      url=https://npmmirror.com/mirrors/electron-builder-binaries/appimage-12.0.1/appimage-12.0.1.7z duration=2.3s
+  • building        target=deb arch=x64 file=release/fluxtv-desktop_1.0.0_amd64.deb
+  ⨯ Please specify project homepage, see https://electron.build/configuration/configuration#Metadata-homepage  failedTask=build stackTrace=Error: Please specify project homepage, see https://electron.build/configuration/configuration#Metadata-homepage
+    at FpmTarget.computeFpmMetaInfoOptions (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/targets/FpmTarget.ts:94:13)
+    at FpmTarget.build (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/targets/FpmTarget.ts:165:25)
+    at /home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/platformPackager.ts:158:11
+    at async Promise.all (index 0)
+    at AsyncTaskManager.awaitTasks (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/builder-util/src/asyncTaskManager.ts:65:25)
+    at Packager.doBuild (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/packager.ts:461:5)
+    at executeFinally (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/builder-util/src/promise.ts:12:14)
+    at Packager._build (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/packager.ts:379:31)
+    at Packager.build (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/app-builder-lib/src/packager.ts:340:12)
+    at executeFinally (/home/runner/work/FluxTV/FluxTV/desktop/node_modules/builder-util/src/promise.ts:12:14)
+Error: Process completed with exit code 1.

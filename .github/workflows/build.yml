@@ -88,7 +88,7 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --linux AppImage deb --publish=never
+          npx electron-builder --linux AppImage --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

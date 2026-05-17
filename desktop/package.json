@@ -41,65 +41,12 @@
   "build": {
     "appId": "com.fluxtv.desktop",
     "productName": "FluxTV",
-    "copyright": "Copyright © 2024 FluxTV",
     "directories": {
-      "output": "release",
-      "buildResources": "build"
+      "output": "release"
     },
     "files": [
       "dist/**/*",
       "electron/**/*"
-    ],
-    "mac": {
-      "category": "public.app-category.entertainment",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.icns"
-    },
-    "windows": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico"
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "category": "AudioVideo",
-      "icon": "build/icons"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "deleteAppDataOnUninstall": false
-    },
-    "publish": null
+    ]
   }
 }

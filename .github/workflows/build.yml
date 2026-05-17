@@ -10,6 +10,10 @@ on:
 jobs:
   build-mac:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -22,7 +26,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: desktop/node_modules
-          key: mac-node-${{ hashFiles('desktop/package-lock.json') }}
+          key: mac-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -30,15 +34,19 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --mac --publish=never
+          npx electron-builder --mac --${{ matrix.arch }} --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-mac
+          name: FluxTV-mac-${{ matrix.arch }}
           path: desktop/release/*.dmg
 
   build-win:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -51,7 +59,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: desktop/node_modules
-          key: win-node-${{ hashFiles('desktop/package-lock.json') }}
+          key: win-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -59,15 +67,19 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --win --publish=never
+          npx electron-builder --win --${{ matrix.arch }} --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-win
+          name: FluxTV-win-${{ matrix.arch }}
           path: desktop/release/*.exe
 
   build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -80,7 +92,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: desktop/node_modules
-          key: linux-node-${{ hashFiles('desktop/package-lock.json') }}
+          key: linux-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -88,11 +100,11 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --linux AppImage --publish=never
+          npx electron-builder --linux AppImage deb --${{ matrix.arch }} --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-linux
+          name: FluxTV-linux-${{ matrix.arch }}
           path: |
             desktop/release/*.AppImage
             desktop/release/*.deb
@@ -120,9 +132,16 @@ jobs:
             
             ## 安装说明
             
-            - **macOS**: `FluxTV-*.dmg`
-            - **Windows**: `FluxTV-*.exe`
-            - **Linux**: `FluxTV-*.AppImage` (通用) 或 `*.deb`
+            ### macOS
+            - **Intel (x64)**: `FluxTV-*-x64.dmg`
+            - **Apple Silicon (arm64)**: `FluxTV-*-arm64.dmg`
+            
+            ### Windows
+            - **x64**: `FluxTV-*-x64.exe`
+            
+            ### Linux
+            - **x64 (通用)**: `FluxTV-*-x64.AppImage`
+            - **x64 (Debian/Ubuntu)**: `FluxTV-*-x64.deb`
             
             ## 配置直播源
             

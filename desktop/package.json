@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "FluxTV - IPTV 桌面播放器",
   "main": "electron/main.js",
-  "author": "19920728",
+  "author": "19920728 <example@email.com>",
   "license": "MIT",
   "homepage": "https://github.com/hello-github-ui/FluxTV",
   "repository": {

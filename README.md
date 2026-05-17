@@ -45,11 +45,10 @@ git checkout desktop-app
 
 # 2. 如果有代码修改，先提交
 git add .
-git commit -m "你的修改说明"
-git push origin desktop-app
 
 # 3. 创建新 tag
 git tag -a v1.0.0 -m "FluxTV v1.0.0 发布"
+git commit -m "你的修改说明"
 
 # 4. 推送 tag 到 GitHub
 # 方式一：单独推送该 tag

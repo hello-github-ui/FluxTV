@@ -55,7 +55,7 @@ git tag -a v1.0.0 -m "FluxTV v1.0.0 发布"
 # 方式一：单独推送该 tag
 git push origin v1.0.0
 
-# 方式二：推送所有本地 tags（推荐）
+# 方式二：推送所有本地 tags（这种方式不要用，不知道为啥，会有问题，使用上面的方式一）
 git push --tags
 ```
 

@@ -260,6 +260,46 @@ function VideoPlayer({
     }
   };
 
+  /**
+   * 显示控制栏并设置自动隐藏
+   */
+  const showControls = () => {
+    setShowControls(true);
+    if (hideControlsTimer.current) {
+      clearTimeout(hideControlsTimer.current);
+    }
+    if (isPlaying) {
+      hideControlsTimer.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    }
+  };
+
+  /**
+   * 监听播放状态，控制控制栏自动隐藏
+   */
+  useEffect(() => {
+    if (isPlaying) {
+      showControls();
+    } else {
+      setShowControls(true);
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+      }
+    }
+  }, [isPlaying]);
+
+  /**
+   * 清理定时器
+   */
+  useEffect(() => {
+    return () => {
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -270,6 +310,7 @@ function VideoPlayer({
         width: '100%',
         height: '100%',
       }}
+      onMouseMove={showControls}
     >
       {/* 视频元素 */}
       <video
@@ -317,7 +358,7 @@ function VideoPlayer({
         </div>
       )}
 
-      {/* 控制栏 - 始终显示 */}
+      {/* 控制栏 - 根据状态显示/隐藏 */}
       <div
         style={{
           position: 'absolute',
@@ -328,6 +369,8 @@ function VideoPlayer({
           background: 'rgba(0,0,0,0.85)',
           zIndex: 100,
           borderTop: '1px solid rgba(255,255,255,0.2)',
+          opacity: showControls ? 1 : 0,
+          transition: 'opacity 0.3s ease',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

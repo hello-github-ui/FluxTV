@@ -34,3 +34,10 @@ replay_pid*
 **/logs/
 **/*.log
 **/log/
+
+# Desktop App
+desktop/dist/
+desktop/release/
+desktop/out/
+desktop/.cache/
+

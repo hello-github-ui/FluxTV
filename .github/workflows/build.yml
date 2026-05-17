@@ -1,0 +1,173 @@
+name: Build FluxTV Desktop
+
+on:
+  push:
+    branches:
+      - desktop-app
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - desktop-app
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        arch: [x64, arm64]
+        exclude:
+          - os: windows-latest
+            arch: arm64
+          - os: ubuntu-latest
+            arch: arm64
+        include:
+          - os: macos-latest
+            arch: x64
+            target: mac-x64
+          - os: macos-latest
+            arch: arm64
+            target: mac-arm64
+          - os: windows-latest
+            arch: x64
+            target: win-x64
+          - os: ubuntu-latest
+            arch: x64
+            target: linux-x64
+          - os: ubuntu-latest
+            arch: arm64
+            target: linux-arm64
+    env:
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            desktop/node_modules
+            ~/.npm
+            ~/.pnpm-store
+            ~/.yarn/cache
+          key: ${{ matrix.os }}-node-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ matrix.os }}-node-
+
+      - name: Cache Electron
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cache/electron
+            .cache/electron-builder
+          key: ${{ matrix.os }}-electron-${{ hashFiles('desktop/package.json') }}
+          restore-keys: |
+            ${{ matrix.os }}-electron-
+
+      - name: Install dependencies
+        working-directory: ./desktop
+        run: npm ci
+
+      - name: Build React app
+        working-directory: ./desktop
+        run: npm run build
+
+      - name: Build Electron app (macOS)
+        if: startsWith(matrix.os, 'macos')
+        working-directory: ./desktop
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          npm run build:mac -- --${{ matrix.arch }} --publish=never
+
+      - name: Build Electron app (Windows)
+        if: startsWith(matrix.os, 'windows')
+        working-directory: ./desktop
+        run: |
+          npm run build:win -- --${{ matrix.arch }} --publish=never
+
+      - name: Build Electron app (Linux)
+        if: startsWith(matrix.os, 'ubuntu')
+        working-directory: ./desktop
+        run: |
+          npm run build:linux -- --${{ matrix.arch }} --publish=never
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxTV-${{ matrix.target }}
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.exe
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          prerelease: false
+          files: artifacts/**/*
+          name: FluxTV Desktop ${{ github.ref_name }}
+          body: |
+            # FluxTV Desktop ${{ github.ref_name }}
+            
+            ## 功能特性
+            - 支持 IPTV 直播流播放
+            - 支持 macOS、Windows、Linux 平台
+            - 多架构支持 (x64, arm64)
+            - 频道分类和收藏功能
+            - 画中画和全屏播放
+            
+            ## 安装说明
+            
+            ### macOS
+            - Intel: `FluxTV-${{ github.ref_name }}-mac-x64.dmg`
+            - Apple Silicon: `FluxTV-${{ github.ref_name }}-mac-arm64.dmg`
+            
+            ### Windows
+            - `FluxTV-${{ github.ref_name }}-win-x64.exe`
+            
+            ### Linux
+            - `FluxTV-${{ github.ref_name }}-linux-x64.AppImage` (通用)
+            - `FluxTV-${{ github.ref_name }}-linux-x64.deb` (Debian/Ubuntu)
+            - `FluxTV-${{ github.ref_name }}-linux-arm64.AppImage` (ARM64)
+            - `FluxTV-${{ github.ref_name }}-linux-arm64.deb` (Debian/Ubuntu ARM64)
+            
+            ## 配置直播源
+            1. 打开应用后，点击右上角设置图标
+            2. 在 API 地址中填入你的 Cloudflare Worker 地址
+            3. 点击保存，然后刷新频道列表
+            
+            ## 注意事项
+            - 首次运行可能需要安装依赖
+            - 部分直播源可能需要 IPv6 网络支持
+            - 如果直播源无法播放，可能是源已失效

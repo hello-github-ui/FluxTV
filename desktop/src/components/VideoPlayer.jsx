@@ -263,7 +263,7 @@ function VideoPlayer({
   /**
    * 显示控制栏并设置自动隐藏
    */
-  const showControls = () => {
+  const handleShowControls = () => {
     setShowControls(true);
     if (hideControlsTimer.current) {
       clearTimeout(hideControlsTimer.current);
@@ -280,7 +280,7 @@ function VideoPlayer({
    */
   useEffect(() => {
     if (isPlaying) {
-      showControls();
+      handleShowControls();
     } else {
       setShowControls(true);
       if (hideControlsTimer.current) {
@@ -310,7 +310,7 @@ function VideoPlayer({
         width: '100%',
         height: '100%',
       }}
-      onMouseMove={showControls}
+      onMouseMove={handleShowControls}
     >
       {/* 视频元素 */}
       <video

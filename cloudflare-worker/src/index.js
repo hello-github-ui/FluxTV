@@ -349,7 +349,7 @@ function deduplicateChannels(channels) {
  */
 function isValidChannel(name) {
   const invalidPatterns = [
-    'CCTV-', '测试', 'Test', 'TEST', '试播', '备用', 'Backup', 'backup',
+    '测试', 'Test', 'TEST', '试播', '备用', 'Backup', 'backup',
     '无效', '无效频道', '广告', '购物', 'Shop', 'shop', '广告频道'
   ];
 

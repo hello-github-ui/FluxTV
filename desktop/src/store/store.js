@@ -176,6 +176,7 @@ const useStore = create((set, get) => ({
    */
   refreshChannels: async () => {
     const { settings } = get();
+    set({ channelsLoading: true, channelsError: null });
 
     try {
       const response = await fetch(`${settings.apiUrl}/api/live`);
@@ -198,10 +199,10 @@ const useStore = create((set, get) => ({
         categorized[category].push(channel);
       }
 
-      set({ channels, categorizedChannels: categorized });
+      set({ channels, categorizedChannels: categorized, channelsLoading: false });
     } catch (error) {
       console.error('刷新频道失败:', error);
-      set({ channelsError: error.message });
+      set({ channelsError: error.message, channelsLoading: false });
     }
   },
 

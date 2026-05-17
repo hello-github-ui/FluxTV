@@ -41,7 +41,8 @@ function Settings() {
   const [form] = Form.useForm();
   const [version, setVersion] = useState('1.0.0');
   const [platform, setPlatform] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
 
   /**
    * 加载应用信息
@@ -59,11 +60,14 @@ function Settings() {
    * 处理表单提交
    */
   const handleSubmit = async (values) => {
+    setSaveLoading(true);
     try {
       await saveSettings(values);
       message.success('设置已保存');
     } catch (error) {
       message.error('保存失败');
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -104,7 +108,7 @@ function Settings() {
    */
   const handleTestConnection = async () => {
     const hideLoading = message.loading('正在测试连接...', 0);
-    setLoading(true);
+    setTestLoading(true);
 
     try {
       const apiUrl = form.getFieldValue('apiUrl') || settings.apiUrl;
@@ -121,7 +125,7 @@ function Settings() {
       message.error('连接失败，请检查 API 地址是否正确');
     } finally {
       hideLoading();
-      setLoading(false);
+      setTestLoading(false);
     }
   };
 
@@ -215,10 +219,10 @@ function Settings() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={saveLoading}>
                 保存设置
               </Button>
-              <Button onClick={handleTestConnection} loading={loading}>
+              <Button onClick={handleTestConnection} loading={testLoading}>
                 测试连接
               </Button>
             </Space>

@@ -110,6 +110,13 @@ const IPTV_SOURCES = [
     url: 'https://m3u.ibert.me/fmm_ipv6.m3u',
     type: 'm3u',
   },
+  
+  // epg.pw 测试源 (可能有些可用)
+  {
+    name: 'epg.pw 测试源',
+    url: 'https://epg.pw/test_channels.m3u',
+    type: 'm3u',
+  },
 ];
 
 /**

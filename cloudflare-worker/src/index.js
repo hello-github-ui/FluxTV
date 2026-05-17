@@ -110,20 +110,6 @@ const IPTV_SOURCES = [
     url: 'https://m3u.ibert.me/fmm_ipv6.m3u',
     type: 'm3u',
   },
-
-  // epg.pw 源
-  {
-    name: 'epg.pw (直播)',
-    url: 'https://epg.pw/test_channels.m3u',
-    type: 'm3u',
-  },
-  
-  // 更多 GitHub 源
-  {
-    name: 'iptv-channels',
-    url: 'https://iptv-org.github.io/iptv/categories/news.m3u',
-    type: 'm3u',
-  },
 ];
 
 /**

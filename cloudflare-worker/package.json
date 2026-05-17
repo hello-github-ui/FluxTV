@@ -1,0 +1,14 @@
+{
+  "name": "fluxtv-iptv-api",
+  "version": "1.0.0",
+  "description": "FluxTV IPTV 直播源获取 API 服务",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev src/index.js",
+    "deploy": "wrangler deploy src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

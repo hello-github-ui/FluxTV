@@ -1,0 +1,15 @@
+name = "fluxtv-iptv-api"
+main = "src/index.js"
+
+[site]
+bucket = "./dist"
+
+[env.production]
+vars = { HEADER_NAME = "value" }
+
+[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["0 * * * *"]

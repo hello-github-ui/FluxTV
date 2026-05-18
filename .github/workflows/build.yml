@@ -8,12 +8,8 @@ on:
       - 'v*'
 
 jobs:
-  build-mac:
+  build-mac-x64:
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64, arm64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -22,11 +18,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: desktop/node_modules
-          key: mac-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -34,19 +25,39 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --mac --${{ matrix.arch }} --publish=never
+          npx electron-builder --mac --x64 --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-mac-${{ matrix.arch }}
+          name: FluxTV-mac-x64
+          path: desktop/release/*.dmg
+
+  build-mac-arm64:
+    runs-on: macos-latest
+    env:
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: ./desktop
+        run: npm ci
+      - name: Build app
+        working-directory: ./desktop
+        run: |
+          npm run build
+          npx electron-builder --mac --arm64 --publish=never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxTV-mac-arm64
           path: desktop/release/*.dmg
 
   build-win:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -55,11 +66,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: desktop/node_modules
-          key: win-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -67,19 +73,15 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --win --${{ matrix.arch }} --publish=never
+          npx electron-builder --win --x64 --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-win-${{ matrix.arch }}
+          name: FluxTV-win
           path: desktop/release/*.exe
 
-  build-linux:
+  build-linux-appimage:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x64]
     env:
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
@@ -88,11 +90,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: desktop/node_modules
-          key: linux-${{ matrix.arch }}-node-${{ hashFiles('desktop/package-lock.json') }}
       - name: Install dependencies
         working-directory: ./desktop
         run: npm ci
@@ -100,17 +97,39 @@ jobs:
         working-directory: ./desktop
         run: |
           npm run build
-          npx electron-builder --linux AppImage deb --${{ matrix.arch }} --publish=never
+          npx electron-builder --linux AppImage --x64 --publish=never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: FluxTV-linux-${{ matrix.arch }}
-          path: |
-            desktop/release/*.AppImage
-            desktop/release/*.deb
+          name: FluxTV-linux-appimage
+          path: desktop/release/*.AppImage
+
+  build-linux-deb:
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: ./desktop
+        run: npm ci
+      - name: Build app
+        working-directory: ./desktop
+        run: |
+          npm run build
+          npx electron-builder --linux deb --x64 --publish=never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxTV-linux-deb
+          path: desktop/release/*.deb
 
   release:
-    needs: [build-mac, build-win, build-linux]
+    needs: [build-mac-x64, build-mac-arm64, build-win, build-linux-appimage, build-linux-deb]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
@@ -137,11 +156,11 @@ jobs:
             - **Apple Silicon (arm64)**: `FluxTV-*-arm64.dmg`
             
             ### Windows
-            - **x64**: `FluxTV-*-x64.exe`
+            - **x64**: `FluxTV-Setup-*.exe`
             
             ### Linux
-            - **x64 (通用)**: `FluxTV-*-x64.AppImage`
-            - **x64 (Debian/Ubuntu)**: `FluxTV-*-x64.deb`
+            - **x64 (通用)**: `FluxTV-*.AppImage`
+            - **x64 (Debian/Ubuntu)**: `fluxtv-desktop_*_amd64.deb`
             
             ## 配置直播源
             

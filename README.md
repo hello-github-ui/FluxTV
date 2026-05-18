@@ -53,9 +53,10 @@ git commit -m "你的修改说明"
 # 4. 推送 tag 到 GitHub
 # 方式一：单独推送该 tag
 git push origin v1.0.0
+git push origin desktop-app
 
-# 方式二：推送所有本地 tags（这种方式不要用，不知道为啥，会有问题，使用上面的方式一）
-git push --tags
+# 方式二：推送所有本地 tags（推荐）
+git push origin --tags
 ```
 
 推送后，GitHub Actions 会自动执行以下操作：

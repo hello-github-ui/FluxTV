@@ -25,6 +25,18 @@ const CORS_HEADERS = {
  * 优先级：把更稳定的源放前面
  */
 const IPTV_SOURCES = [
+  // 用户自己部署的源 (最高优先级，每4小时自动更新)
+  {
+    name: 'hello-github-ui (M3U8)',
+    url: 'https://collect-iptv-five.vercel.app/best_sorted.m3u8',
+    type: 'm3u',
+  },
+  {
+    name: 'hello-github-ui (M3U)',
+    url: 'https://collect-iptv-five.vercel.app/best_sorted.m3u',
+    type: 'm3u',
+  },
+  
   // fanmingming 稳定源 (多个格式)
   {
     name: 'fanmingming (IPv6)',
